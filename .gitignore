@@ -2,7 +2,7 @@
 venv/
 env/
 ENV/
-.venv
+.venv/
 pip-log.txt
 pip-delete-this-directory.txt
 
@@ -37,12 +37,15 @@ MANIFEST
 *.swp
 *.swo
 *~
-.DS_Store
 .project
 .pydevproject
 .settings/
 *.sublime-project
 *.sublime-workspace
+
+# Jupyter
+.ipynb_checkpoints/
+.jupyter/
 
 # Environment variables
 .env
@@ -63,3 +66,13 @@ htmlcov/
 Thumbs.db
 *.bak
 *.tmp
+
+# Python tooling
+.python-version
+
+# ML artifacts
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
