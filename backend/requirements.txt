@@ -1,0 +1,7 @@
+flask>=3.0
+flask-cors>=4.0
+numpy
+pandas
+# Must match the version that produced models/*.pkl (GradientBoostingClassifier)
+scikit-learn==1.7.2
+joblib
