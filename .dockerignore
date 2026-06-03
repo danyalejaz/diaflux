@@ -1,0 +1,23 @@
+# Python envs / caches
+venv/
+**/__pycache__/
+*.pyc
+
+# Node
+diaflux_frontend/node_modules/
+diaflux_frontend/dist/
+
+# Data science / repo extras not needed in the runtime image
+notebooks/
+data/
+*.ipynb
+.git/
+.gitignore
+test_model_saving.py
+
+# Docs (not needed at runtime)
+*.md
+
+# OS junk
+.DS_Store
+Thumbs.db

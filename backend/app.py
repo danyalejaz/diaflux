@@ -21,7 +21,7 @@ import warnings
 import joblib
 import numpy as np
 import pandas as pd
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 # Silence sklearn "model trained on a different version" notices; the
@@ -38,6 +38,13 @@ MODEL_PATH = os.path.join(MODELS_DIR, "diabetes_model.pkl")
 SCALER_PATH = os.path.join(MODELS_DIR, "scaler.pkl")
 
 PORT = int(os.environ.get("PORT", "5000"))
+
+# Directory holding the built React frontend (vite build output). In a single
+# container deployment (e.g. Hugging Face Spaces) Flask serves these static
+# files itself, so the whole app lives on one origin with no CORS / proxy.
+FRONTEND_DIST = os.environ.get(
+    "FRONTEND_DIST", os.path.join(PROJECT_ROOT, "diaflux_frontend", "dist")
+)
 
 # Exact feature order the model & scaler were trained on (from the notebook
 # preprocessing pipeline: numeric columns first, then one-hot gender, then
@@ -82,7 +89,7 @@ try:
 except (ValueError, TypeError):
     POSITIVE_CLASS_INDEX = 1
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=FRONTEND_DIST, static_url_path="")
 CORS(app)
 
 
@@ -370,6 +377,35 @@ def recommendations():
             "medical_recommendations": recs["medical"],
         }
     )
+
+
+# --------------------------------------------------------------------------- #
+# Serve the React single-page app (when a built frontend is present)
+# --------------------------------------------------------------------------- #
+@app.get("/")
+def index():
+    index_file = os.path.join(FRONTEND_DIST, "index.html")
+    if os.path.exists(index_file):
+        return send_from_directory(FRONTEND_DIST, "index.html")
+    return jsonify(
+        {
+            "service": "DiaFlux ML backend",
+            "status": "running",
+            "note": "Frontend build not found. Build diaflux_frontend or use the API at /api/*.",
+        }
+    )
+
+
+@app.errorhandler(404)
+def spa_fallback(_error):
+    # API misses stay JSON; everything else falls back to the SPA entrypoint so
+    # client-side routing / direct deep links work.
+    if request.path.startswith("/api/"):
+        return jsonify({"success": False, "error": "Not found."}), 404
+    index_file = os.path.join(FRONTEND_DIST, "index.html")
+    if os.path.exists(index_file):
+        return send_from_directory(FRONTEND_DIST, "index.html")
+    return jsonify({"success": False, "error": "Not found."}), 404
 
 
 if __name__ == "__main__":
